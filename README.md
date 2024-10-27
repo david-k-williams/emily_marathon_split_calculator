@@ -1,16 +1,23 @@
-# emily_marathon_split_calculator
 
-A new Flutter project.
+# Emily’s Race Split Estimator
 
-## Getting Started
+Emily’s Race Split Estimator is a Flutter application that allows runners to estimate their split times for common race distances (5K, 10K, Half Marathon, and Marathon) based on a selected pace and start time. This tool is helpful for runners who want to plan their race pacing and know their estimated arrival times at key mile markers.
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- Race Distance Selection: Choose from 5K, 10K, Half Marathon, and Marathon distances.- Pace Selection: Set your pace in minutes and seconds per mile.
+- Start Time Selection: Select the race start time to see estimated arrival times.
+- Split Time Calculation: Calculates cumulative times at each mile marker and highlights key distances (like 5K, 10K, Half Marathon).
+- Collapsible Settings Card: The settings card collapses after calculating splits and can be re-opened for new calculations.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Badges
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+
+
+## Authors
+
+- [@david-k-williams](https://www.github.com/david-k-williams)
+
