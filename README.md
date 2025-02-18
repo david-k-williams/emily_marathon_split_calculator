@@ -10,6 +10,12 @@ Emily’s Race Split Estimator is a Flutter application that allows runners to e
 - Split Time Calculation: Calculates cumulative times at each mile marker and highlights key distances (like 5K, 10K, Half Marathon).
 - Collapsible Settings Card: The settings card collapses after calculating splits and can be re-opened for new calculations.
 
+## Releases
+
+### 1.0.1
+
+- Support for 50k races added.
+
 ## Badges
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)

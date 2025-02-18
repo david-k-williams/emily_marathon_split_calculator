@@ -31,6 +31,7 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
     '10K': 6.2,
     'Half Marathon': 13.1,
     'Marathon': 26.2,
+    '50k': 31.1,
   };
 
   List<Map<String, dynamic>> calculateSplits(RaceSettingsState state) {
@@ -55,6 +56,7 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
       6.2: '10K',
       13.1: 'Half Marathon',
       26.2: 'Marathon',
+      31.1: '50k',
     };
 
     for (int mile = 1; mile <= totalMiles.floor(); mile++) {
