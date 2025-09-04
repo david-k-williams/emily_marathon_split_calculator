@@ -1,5 +1,90 @@
 import "package:flutter/material.dart";
 
+// Custom theme extension for app-specific styling constants
+@immutable
+class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
+  const AppThemeExtension({
+    required this.cardPadding,
+    required this.cardSpacing,
+    required this.sectionSpacing,
+    required this.borderRadius,
+    required this.largeBorderRadius,
+    required this.buttonPadding,
+    required this.inputPadding,
+    required this.listItemPadding,
+    required this.listItemSpacing,
+  });
+
+  final double cardPadding;
+  final double cardSpacing;
+  final double sectionSpacing;
+  final double borderRadius;
+  final double largeBorderRadius;
+  final double buttonPadding;
+  final double inputPadding;
+  final double listItemPadding;
+  final double listItemSpacing;
+
+  @override
+  AppThemeExtension copyWith({
+    double? cardPadding,
+    double? cardSpacing,
+    double? sectionSpacing,
+    double? borderRadius,
+    double? largeBorderRadius,
+    double? buttonPadding,
+    double? inputPadding,
+    double? listItemPadding,
+    double? listItemSpacing,
+  }) {
+    return AppThemeExtension(
+      cardPadding: cardPadding ?? this.cardPadding,
+      cardSpacing: cardSpacing ?? this.cardSpacing,
+      sectionSpacing: sectionSpacing ?? this.sectionSpacing,
+      borderRadius: borderRadius ?? this.borderRadius,
+      largeBorderRadius: largeBorderRadius ?? this.largeBorderRadius,
+      buttonPadding: buttonPadding ?? this.buttonPadding,
+      inputPadding: inputPadding ?? this.inputPadding,
+      listItemPadding: listItemPadding ?? this.listItemPadding,
+      listItemSpacing: listItemSpacing ?? this.listItemSpacing,
+    );
+  }
+
+  @override
+  AppThemeExtension lerp(AppThemeExtension? other, double t) {
+    if (other is! AppThemeExtension) {
+      return this;
+    }
+    return AppThemeExtension(
+      cardPadding: cardPadding,
+      cardSpacing: cardSpacing,
+      sectionSpacing: sectionSpacing,
+      borderRadius: borderRadius,
+      largeBorderRadius: largeBorderRadius,
+      buttonPadding: buttonPadding,
+      inputPadding: inputPadding,
+      listItemPadding: listItemPadding,
+      listItemSpacing: listItemSpacing,
+    );
+  }
+}
+
+// Helper function to get app theme extension
+AppThemeExtension appTheme(BuildContext context) {
+  return Theme.of(context).extension<AppThemeExtension>() ??
+      const AppThemeExtension(
+        cardPadding: 16.0,
+        cardSpacing: 16.0,
+        sectionSpacing: 24.0,
+        borderRadius: 12.0,
+        largeBorderRadius: 16.0,
+        buttonPadding: 16.0,
+        inputPadding: 16.0,
+        listItemPadding: 16.0,
+        listItemSpacing: 8.0,
+      );
+}
+
 class MaterialTheme {
   final TextTheme textTheme;
 
@@ -345,6 +430,17 @@ class MaterialTheme {
     return theme(darkHighContrastScheme());
   }
 
+  // App-specific styling constants
+  static const double cardPadding = 16.0;
+  static const double cardSpacing = 16.0;
+  static const double sectionSpacing = 24.0;
+  static const double borderRadius = 12.0;
+  static const double largeBorderRadius = 16.0;
+  static const double buttonPadding = 16.0;
+  static const double inputPadding = 16.0;
+  static const double listItemPadding = 16.0;
+  static const double listItemSpacing = 8.0;
+
   ThemeData theme(ColorScheme colorScheme) => ThemeData(
         useMaterial3: true,
         brightness: colorScheme.brightness,
@@ -355,6 +451,19 @@ class MaterialTheme {
         ),
         scaffoldBackgroundColor: colorScheme.surface,
         canvasColor: colorScheme.surface,
+        extensions: const [
+          AppThemeExtension(
+            cardPadding: 16.0,
+            cardSpacing: 16.0,
+            sectionSpacing: 24.0,
+            borderRadius: 12.0,
+            largeBorderRadius: 16.0,
+            buttonPadding: 16.0,
+            inputPadding: 16.0,
+            listItemPadding: 16.0,
+            listItemSpacing: 8.0,
+          ),
+        ],
 
         // Enhanced AppBar theme
         appBarTheme: AppBarTheme(
@@ -371,9 +480,9 @@ class MaterialTheme {
         ),
 
         // Enhanced Card theme
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
-          shadowColor: colorScheme.shadow.withOpacity(0.1),
+          shadowColor: colorScheme.shadow.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -384,7 +493,7 @@ class MaterialTheme {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             elevation: 3,
-            shadowColor: colorScheme.primary.withOpacity(0.3),
+            shadowColor: colorScheme.primary.withValues(alpha: 0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -422,7 +531,7 @@ class MaterialTheme {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: colorScheme.outline.withOpacity(0.3),
+              color: colorScheme.outline.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -445,7 +554,7 @@ class MaterialTheme {
         ),
 
         // Enhanced TabBar theme
-        tabBarTheme: TabBarTheme(
+        tabBarTheme: TabBarThemeData(
           labelColor: colorScheme.primary,
           unselectedLabelColor: colorScheme.onSurfaceVariant,
           indicator: UnderlineTabIndicator(
@@ -473,13 +582,19 @@ class MaterialTheme {
             if (states.contains(WidgetState.selected)) {
               return colorScheme.primary;
             }
-            return colorScheme.outline;
+            return colorScheme.onSurfaceVariant;
           }),
           trackColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return colorScheme.primary.withOpacity(0.3);
+              return colorScheme.primary.withValues(alpha: 0.3);
             }
             return colorScheme.surfaceContainerHigh;
+          }),
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return colorScheme.primary.withValues(alpha: 0.1);
+            }
+            return Colors.transparent;
           }),
         ),
 

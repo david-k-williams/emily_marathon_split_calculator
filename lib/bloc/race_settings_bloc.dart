@@ -4,6 +4,7 @@ import 'package:emily_marathon_split_calculator/bloc/bloc_event.dart';
 import 'package:emily_marathon_split_calculator/bloc/bloc_state.dart';
 import 'package:emily_marathon_split_calculator/services/race_service.dart';
 import 'package:emily_marathon_split_calculator/models/race.dart';
+import 'package:share_plus/share_plus.dart';
 
 class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
   List<Race> _races = [];
@@ -22,11 +23,17 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
     on<SetRaceDistance>((event, emit) {
       emit(state.copyWith(raceDistance: event.distance));
     });
-    on<CalculateSplitsEvent>((event, emit) {
+    on<CalculateSplitsEvent>((event, emit) async {
+      // Ensure races are loaded
+      if (_races.isEmpty) {
+        await _loadRaces();
+      }
+
       // Validate pace inputs
       if (state.paceMinutes < 3 || state.paceMinutes > 20) {
         emit(state.copyWith(
-          errorMessage: 'Pace must be between 3:00 and 20:00 per mile',
+          errorMessage:
+              'Pace must be between 3:00 and 20:00 per ${state.useMetricUnits ? 'km' : 'mi'}',
           settingsVisible: true,
         ));
         return;
@@ -99,29 +106,53 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
         errorMessage: null,
       ));
     });
-    on<ExportSplits>((event, emit) {
-      // This will be handled in the UI layer
+    on<ExportSplits>((event, emit) async {
+      if (state.splitTimes.isEmpty) {
+        emit(state.copyWith(
+          errorMessage: 'No splits to export. Calculate splits first.',
+          settingsVisible: true,
+        ));
+        return;
+      }
+
+      try {
+        final currentRace = _getCurrentRace();
+        final raceName = currentRace?.name ?? state.raceDistance;
+        final unitLabel = state.useMetricUnits ? 'km' : 'mi';
+        final paceText =
+            "${state.paceMinutes}:${state.paceSeconds.toString().padLeft(2, '0')} per $unitLabel";
+
+        StringBuffer exportText = StringBuffer();
+        exportText.writeln('$raceName Split Times');
+        exportText.writeln('Pace: $paceText');
+        exportText.writeln(
+            'Start Time: ${state.startTime.hour.toString().padLeft(2, '0')}:${state.startTime.minute.toString().padLeft(2, '0')}');
+        exportText.writeln('');
+
+        for (final split in state.splitTimes) {
+          exportText.writeln(split['text']);
+        }
+
+        await Share.share(exportText.toString(),
+            subject: '$raceName Split Times');
+      } catch (e) {
+        emit(state.copyWith(
+          errorMessage: 'Failed to export splits: $e',
+          settingsVisible: true,
+        ));
+      }
     });
   }
 
-  final Map<String, double> raceDistances = {
-    '5K': 3.1,
-    '10K': 6.2,
-    'Half Marathon': 13.1,
-    'Marathon': 26.2,
-  };
-
-  final Map<String, double> raceDistancesKm = {
-    '5K': 5.0,
-    '10K': 10.0,
-    'Half Marathon': 21.1,
-    'Marathon': 42.2,
-  };
-
   List<Map<String, dynamic>> calculateSplits(RaceSettingsState state) {
-    final totalDistance = state.useMetricUnits
-        ? raceDistancesKm[state.raceDistance] ?? 42.2
-        : raceDistances[state.raceDistance] ?? 26.2;
+    final currentRace = _getCurrentRace();
+    if (currentRace == null) {
+      return [
+        {'text': 'Error: Race not found', 'isBold': true}
+      ];
+    }
+
+    final totalDistance = currentRace.getDistance(state.useMetricUnits);
     final paceDuration =
         Duration(minutes: state.paceMinutes, seconds: state.paceSeconds);
     DateTime currentTime =
@@ -136,20 +167,12 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
       'isBold': true,
     });
 
-    // Key distances with precise fractional values
-    final keyDistances = state.useMetricUnits
-        ? {
-            5.0: '5K',
-            10.0: '10K',
-            21.1: 'Half Marathon',
-            42.2: 'Marathon',
-          }
-        : {
-            3.1: '5K',
-            6.2: '10K',
-            13.1: 'Half Marathon',
-            26.2: 'Marathon',
-          };
+    // Use race milestones for key distances
+    final keyDistances = <double, String>{};
+    for (final milestone in currentRace.milestones) {
+      final distance = milestone.getDistance(state.useMetricUnits);
+      keyDistances[distance] = milestone.name;
+    }
 
     final unitLabel = state.useMetricUnits ? 'km' : 'mi';
     final distanceStep = state.useMetricUnits ? 1.0 : 1.0;
@@ -224,7 +247,6 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
       _races = await RaceService.getRaces();
     } catch (e) {
       // Handle error - races will remain empty
-      print('Error loading races: $e');
     }
   }
 

@@ -3,6 +3,8 @@ import 'package:emily_marathon_split_calculator/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:emily_marathon_split_calculator/bloc/bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/app_bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/prediction_bloc.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/main_page.dart';
 
 void main() {
@@ -24,8 +26,12 @@ class MarathonTimeEstimatorApp extends StatelessWidget {
 
     MaterialTheme theme = MaterialTheme(textTheme);
 
-    return BlocProvider(
-      create: (_) => RaceSettingsBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => RaceSettingsBloc()),
+        BlocProvider(create: (_) => AppBloc()),
+        BlocProvider(create: (_) => PredictionBloc()),
+      ],
       child: MaterialApp(
         title: "Emily's Race Split Estimator",
         theme: brightness == Brightness.light ? theme.light() : theme.dark(),

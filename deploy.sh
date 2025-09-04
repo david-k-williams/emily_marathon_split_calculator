@@ -69,6 +69,16 @@ fi
 
 print_success "Build completed successfully!"
 
+# Step 3.1: Copy build to Firebase
+print_status "Copying build to Firebase..."
+cp -r build/web/* firebase/public/
+
+print_success "Build copied to Firebase successfully!"
+
+# Step 3.2: Change directory to firebase
+print_status "Changing directory to firebase..."
+cd firebase
+
 # Step 4: Deploy to Firebase
 print_status "Deploying to Firebase..."
 if ! firebase deploy --only hosting; then
