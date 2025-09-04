@@ -113,4 +113,3 @@ class PredictionBloc extends Bloc<PredictionEvent, PredictionState> {
     });
   }
 }
-
