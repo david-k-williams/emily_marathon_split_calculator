@@ -1,0 +1,129 @@
+[
+  {
+    "name": "5K",
+    "distance_km": 5,
+    "distance_miles": 3.1,
+    "category": "Road",
+    "milestones": [
+      { "name": "1K", "km": 1, "miles": 0.62 },
+      { "name": "2K", "km": 2, "miles": 1.24 },
+      { "name": "Halfway", "km": 2.5, "miles": 1.55 },
+      { "name": "4K", "km": 4, "miles": 2.49 },
+      { "name": "Finish", "km": 5, "miles": 3.1 }
+    ]
+  },
+  {
+    "name": "10K",
+    "distance_km": 10,
+    "distance_miles": 6.2,
+    "category": "Road",
+    "milestones": [
+      { "name": "1K", "km": 1, "miles": 0.62 },
+      { "name": "5K", "km": 5, "miles": 3.1 },
+      { "name": "Halfway", "km": 5, "miles": 3.1 },
+      { "name": "9K", "km": 9, "miles": 5.59 },
+      { "name": "Finish", "km": 10, "miles": 6.2 }
+    ]
+  },
+  {
+    "name": "Half Marathon",
+    "distance_km": 21.097,
+    "distance_miles": 13.1,
+    "category": "Road",
+    "milestones": [
+      { "name": "5K", "km": 5, "miles": 3.1 },
+      { "name": "10K", "km": 10, "miles": 6.2 },
+      { "name": "10 Mile", "km": 16.1, "miles": 10 },
+      { "name": "20K", "km": 20, "miles": 12.4 },
+      { "name": "Finish", "km": 21.097, "miles": 13.1 }
+    ]
+  },
+  {
+    "name": "Marathon",
+    "distance_km": 42.195,
+    "distance_miles": 26.2,
+    "category": "Road",
+    "milestones": [
+      { "name": "5K", "km": 5, "miles": 3.1 },
+      { "name": "10K", "km": 10, "miles": 6.2 },
+      { "name": "Halfway", "km": 21.1, "miles": 13.1 },
+      { "name": "30K", "km": 30, "miles": 18.6 },
+      { "name": "20 Mile", "km": 32.2, "miles": 20 },
+      { "name": "40K", "km": 40, "miles": 24.8 },
+      { "name": "Finish", "km": 42.195, "miles": 26.2 }
+    ]
+  },
+  {
+    "name": "50K",
+    "distance_km": 50,
+    "distance_miles": 31.1,
+    "category": "Ultra",
+    "milestones": [
+      { "name": "10K", "km": 10, "miles": 6.2 },
+      { "name": "Halfway", "km": 25, "miles": 15.5 },
+      { "name": "Marathon Mark", "km": 42.2, "miles": 26.2 },
+      { "name": "Finish", "km": 50, "miles": 31.1 }
+    ]
+  },
+  {
+    "name": "50 Mile",
+    "distance_km": 80.5,
+    "distance_miles": 50,
+    "category": "Ultra",
+    "milestones": [
+      { "name": "10 Mile", "km": 16.1, "miles": 10 },
+      { "name": "20 Mile", "km": 32.2, "miles": 20 },
+      { "name": "Marathon Mark", "km": 42.2, "miles": 26.2 },
+      { "name": "40 Mile", "km": 64.4, "miles": 40 },
+      { "name": "Finish", "km": 80.5, "miles": 50 }
+    ]
+  },
+  {
+    "name": "100K",
+    "distance_km": 100,
+    "distance_miles": 62.1,
+    "category": "Ultra",
+    "milestones": [
+      { "name": "10K", "km": 10, "miles": 6.2 },
+      { "name": "25K", "km": 25, "miles": 15.5 },
+      { "name": "50K", "km": 50, "miles": 31.1 },
+      { "name": "75K", "km": 75, "miles": 46.6 },
+      { "name": "Finish", "km": 100, "miles": 62.1 }
+    ]
+  },
+  {
+    "name": "100 Mile",
+    "distance_km": 160.9,
+    "distance_miles": 100,
+    "category": "Ultra",
+    "milestones": [
+      { "name": "25 Mile", "km": 40.2, "miles": 25 },
+      { "name": "50 Mile", "km": 80.5, "miles": 50 },
+      { "name": "75 Mile", "km": 120.7, "miles": 75 },
+      { "name": "90 Mile", "km": 144.8, "miles": 90 },
+      { "name": "Finish", "km": 160.9, "miles": 100 }
+    ]
+  },
+  {
+    "name": "10 Mile",
+    "distance_km": 16.1,
+    "distance_miles": 10,
+    "category": "Road",
+    "milestones": [
+      { "name": "5K", "km": 5, "miles": 3.1 },
+      { "name": "10K", "km": 10, "miles": 6.2 },
+      { "name": "15K", "km": 15, "miles": 9.3 },
+      { "name": "Finish", "km": 16.1, "miles": 10 }
+    ]
+  },
+  {
+    "name": "1 Mile",
+    "distance_km": 1.609,
+    "distance_miles": 1,
+    "category": "Road",
+    "milestones": [
+      { "name": "Half Mile", "km": 0.8045, "miles": 0.5 },
+      { "name": "Finish", "km": 1.609, "miles": 1 }
+    ]
+  }
+]

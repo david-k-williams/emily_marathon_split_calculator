@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:emily_marathon_split_calculator/bloc/bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/bloc_state.dart';
-import 'package:emily_marathon_split_calculator/bloc/bloc_event.dart';
+import 'package:emily_marathon_split_calculator/services/race_service.dart';
+import 'package:emily_marathon_split_calculator/models/race.dart';
 
 class SettingsCard extends StatelessWidget {
   final RaceSettingsState settings;
 
-  SettingsCard({required this.settings});
+  const SettingsCard({required this.settings, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -22,30 +22,40 @@ class SettingsCard extends StatelessWidget {
           children: [
             const Text("Race Type",
                 style: TextStyle(fontWeight: FontWeight.bold)),
-            DropdownButton<String>(
-              value: settings.raceDistance,
-              items: context
-                  .read<RaceSettingsBloc>()
-                  .raceDistances
-                  .keys
-                  .map((String distance) {
-                return DropdownMenuItem<String>(
-                  value: distance,
-                  child: Text(distance),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  context
-                      .read<RaceSettingsBloc>()
-                      .add(SetRaceDistance(newValue));
+            FutureBuilder<List<Race>>(
+              future: RaceService.getRaces(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
                 }
+
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+
+                final races = snapshot.data ?? [];
+                return DropdownButton<String>(
+                  value: settings.raceDistance,
+                  items: races
+                      .map((Race race) => DropdownMenuItem<String>(
+                            value: race.name,
+                            child: Text(race.name),
+                          ))
+                      .toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      context
+                          .read<RaceSettingsBloc>()
+                          .add(SetRaceDistance(newValue));
+                    }
+                  },
+                );
               },
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Pace",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              "Pace (per ${settings.useMetricUnits ? 'km' : 'mi'})",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             Row(
               children: [
@@ -96,12 +106,39 @@ class SettingsCard extends StatelessWidget {
               child: Text('Start Time: ${settings.startTime.format(context)}'),
             ),
             const SizedBox(height: 16),
+            if (settings.errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        settings.errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Center(
-              child: OutlinedButton(
+              child: ElevatedButton(
                 onPressed: () {
                   context.read<RaceSettingsBloc>().add(CalculateSplitsEvent());
                 },
-                child: const Text('Calculate'),
+                child: const Text('Calculate Splits'),
               ),
             ),
           ],
