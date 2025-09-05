@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/app_bloc.dart' as app_bloc;
-import 'package:emily_marathon_split_calculator/bloc/prediction_bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/blocs.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/race_calculator.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/pace_calculator_page.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/prediction_page.dart';
 import 'package:emily_marathon_split_calculator/utils/export_utils.dart';
 import 'package:emily_marathon_split_calculator/ui/theme/theme.dart';
+import 'package:emily_marathon_split_calculator/ui/widgets/persistent_footer.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -35,10 +34,11 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => app_bloc.AppBloc()),
+        BlocProvider(create: (context) => AppBloc()),
+        BlocProvider(create: (context) => RaceSettingsBloc()),
         BlocProvider(create: (context) => PredictionBloc()),
       ],
-      child: BlocBuilder<app_bloc.AppBloc, app_bloc.AppState>(
+      child: BlocBuilder<AppBloc, AppState>(
         builder: (context, appState) {
           return BlocBuilder<RaceSettingsBloc, RaceSettingsState>(
             builder: (context, raceState) {
@@ -179,8 +179,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                               controller: _pageController,
                               onPageChanged: (index) {
                                 context
-                                    .read<app_bloc.AppBloc>()
-                                    .add(app_bloc.SetSelectedTab(index));
+                                    .read<AppBloc>()
+                                    .add(SetSelectedTab(index));
                               },
                               children: const [
                                 RaceCalculatorPage(),
@@ -191,6 +191,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
+
+                      // Persistent Footer
+                      const PersistentFooter(),
                     ],
                   ),
                 ),
@@ -202,8 +205,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildResponsiveTabSelector(
-      BuildContext context, app_bloc.AppState appState) {
+  Widget _buildResponsiveTabSelector(BuildContext context, AppState appState) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
@@ -299,14 +301,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildTabButton(BuildContext context, app_bloc.AppState appState,
-      int index, IconData icon, String label,
+  Widget _buildTabButton(BuildContext context, AppState appState, int index,
+      IconData icon, String label,
       {required bool isMobile}) {
     final isSelected = appState.selectedTabIndex == index;
 
     return GestureDetector(
       onTap: () {
-        context.read<app_bloc.AppBloc>().add(app_bloc.SetSelectedTab(index));
+        context.read<AppBloc>().add(SetSelectedTab(index));
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/prediction_bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/blocs.dart';
 import 'package:emily_marathon_split_calculator/services/prediction_service.dart';
 import 'package:emily_marathon_split_calculator/ui/theme/theme.dart';
 import 'package:emily_marathon_split_calculator/ui/widgets/consistent_inputs.dart';
@@ -186,40 +186,6 @@ class _PredictionPageState extends State<PredictionPage> {
                                   ),
                             ),
                           ],
-                        ),
-                        SizedBox(height: appTheme(context).cardSpacing),
-
-                        // Formula Description
-                        Container(
-                          padding:
-                              EdgeInsets.all(appTheme(context).cardSpacing),
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).colorScheme.surfaceContainer,
-                            borderRadius: BorderRadius.circular(
-                                appTheme(context).borderRadius),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Formula: ${_getFormulaDisplayName(state.selectedFormula)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              SizedBox(
-                                  height: appTheme(context).cardSpacing / 2),
-                              Text(
-                                PredictionService.formulaDescriptions[
-                                    state.selectedFormula]!,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
                         ),
                         SizedBox(height: appTheme(context).cardSpacing),
 

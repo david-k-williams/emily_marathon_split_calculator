@@ -2,9 +2,7 @@ import 'package:emily_marathon_split_calculator/ui/theme/theme.dart';
 import 'package:emily_marathon_split_calculator/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/app_bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/prediction_bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/blocs.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/main_page.dart';
 
 void main() {

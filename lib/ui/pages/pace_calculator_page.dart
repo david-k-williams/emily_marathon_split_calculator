@@ -1,376 +1,379 @@
 import 'package:flutter/material.dart';
-import 'package:emily_marathon_split_calculator/services/race_service.dart';
-import 'package:emily_marathon_split_calculator/models/race.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/blocs.dart';
 import 'package:emily_marathon_split_calculator/ui/theme/theme.dart';
 import 'package:emily_marathon_split_calculator/ui/widgets/consistent_inputs.dart';
 
-class PaceCalculatorPage extends StatefulWidget {
+class PaceCalculatorPage extends StatelessWidget {
   const PaceCalculatorPage({super.key});
 
   @override
-  State<PaceCalculatorPage> createState() => _PaceCalculatorPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => PaceCalculatorBloc(),
+      child: const _PaceCalculatorView(),
+    );
+  }
 }
 
-class _PaceCalculatorPageState extends State<PaceCalculatorPage> {
-  String? selectedRace;
-  int hours = 0;
-  int minutes = 0;
-  bool useMetricUnits = true;
-  double? calculatedPaceMinutes;
-  double? calculatedPaceSeconds;
+class _PaceCalculatorView extends StatelessWidget {
+  const _PaceCalculatorView();
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Header with gradient
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(appTheme(context).sectionSpacing),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.primaryContainer,
-                  Theme.of(context).colorScheme.secondaryContainer,
-                ],
-              ),
-              borderRadius:
-                  BorderRadius.circular(appTheme(context).largeBorderRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calculate_rounded,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    SizedBox(width: appTheme(context).cardSpacing),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pace Calculator',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
-                                ),
-                          ),
-                          Text(
-                            'Calculate your pace from time and distance',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer
-                                      .withValues(alpha: 0.8),
-                                ),
-                          ),
-                        ],
-                      ),
+    return BlocBuilder<PaceCalculatorBloc, PaceCalculatorState>(
+      builder: (context, state) {
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with gradient
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(appTheme(context).sectionSpacing),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).colorScheme.primaryContainer,
+                      Theme.of(context).colorScheme.secondaryContainer,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(
+                      appTheme(context).largeBorderRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          SizedBox(height: appTheme(context).sectionSpacing),
-
-          // Units Toggle
-          UnitsToggle(
-            useMetricUnits: useMetricUnits,
-            onChanged: (value) {
-              setState(() {
-                useMetricUnits = value;
-                _calculatePace();
-              });
-            },
-          ),
-          SizedBox(height: appTheme(context).sectionSpacing),
-
-          // Input Card
-          Card(
-            child: Padding(
-              padding: EdgeInsets.all(appTheme(context).cardPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Calculate Pace',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  SizedBox(height: appTheme(context).cardSpacing),
-                  Text(
-                    "Enter your time and distance to calculate pace per ${useMetricUnits ? 'km' : 'mi'}",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  SizedBox(height: appTheme(context).cardSpacing),
-
-                  // Distance Selector
-                  _buildDistanceSelector(),
-                  SizedBox(height: appTheme(context).cardSpacing),
-
-                  // Time Input
-                  InteractiveTimeInput(
-                    initialTime: Duration(hours: hours, minutes: minutes),
-                    onTimeChanged: (time) {
-                      setState(() {
-                        hours = time.inHours;
-                        minutes = time.inMinutes % 60;
-                        _calculatePace();
-                      });
-                    },
-                    label: "Time",
-                    showSeconds: false,
-                  ),
-                  SizedBox(height: appTheme(context).cardSpacing),
-
-                  // Calculate Button
-                  StandardButton(
-                    text: 'Calculate Pace',
-                    icon: Icons.calculate_rounded,
-                    onPressed:
-                        selectedRace != null && (hours > 0 || minutes > 0)
-                            ? _calculatePace
-                            : null,
-                  ),
-
-                  // Info message if no distance selected
-                  if (selectedRace == null) ...[
-                    SizedBox(height: appTheme(context).cardSpacing),
-                    Container(
-                      padding: EdgeInsets.all(appTheme(context).cardPadding),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(
-                            appTheme(context).borderRadius),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          SizedBox(width: appTheme(context).cardSpacing / 2),
-                          Expanded(
-                            child: Text(
-                              'Please select a race distance to calculate pace',
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          // Results
-          if (calculatedPaceMinutes != null &&
-              calculatedPaceSeconds != null) ...[
-            SizedBox(height: appTheme(context).sectionSpacing),
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(appTheme(context).cardPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.speed_rounded,
-                          color: Theme.of(context).colorScheme.primary,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.speed_rounded,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            size: 28,
+                          ),
                         ),
-                        SizedBox(width: appTheme(context).cardSpacing / 2),
-                        Text(
-                          'Calculated Pace',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Pace Calculator",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Calculate your pace per ${state.useMetricUnits ? 'km' : 'mi'}",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer
+                                          .withValues(alpha: 0.8),
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                    SizedBox(height: appTheme(context).cardSpacing),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(appTheme(context).cardPadding),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Theme.of(context).colorScheme.primaryContainer,
-                            Theme.of(context).colorScheme.secondaryContainer,
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(
-                            appTheme(context).borderRadius),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '${calculatedPaceMinutes!.toInt()}:${calculatedPaceSeconds!.toInt().toString().padLeft(2, '0')}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .displayMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
-                                ),
-                          ),
-                          Text(
-                            'per ${useMetricUnits ? 'km' : 'mi'}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer
-                                      .withValues(alpha: 0.8),
-                                ),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+              SizedBox(height: appTheme(context).sectionSpacing),
 
-  Widget _buildDistanceSelector() {
-    return FutureBuilder<List<Race>>(
-      future: RaceService.getRaces(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(
-            height: 56,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius:
-                  BorderRadius.circular(appTheme(context).borderRadius),
-            ),
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Container(
-            height: 56,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer,
-              borderRadius:
-                  BorderRadius.circular(appTheme(context).borderRadius),
-            ),
-            child: Text(
-              'Error loading races: ${snapshot.error}',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onErrorContainer,
+              // Units Toggle
+              UnitsToggle(
+                useMetricUnits: state.useMetricUnits,
+                onChanged: (value) {
+                  context
+                      .read<PaceCalculatorBloc>()
+                      .add(SetPaceCalculatorUnits(value));
+                },
               ),
-            ),
-          );
-        }
+              SizedBox(height: appTheme(context).sectionSpacing),
 
-        final races = snapshot.data ?? [];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InputLabel(
-                text: "Distance (${useMetricUnits ? 'km' : 'mi'})",
-                required: true),
-            const InputSpacing(),
-            StandardDropdown<String>(
-              value: selectedRace,
-              hintText: 'Select a race distance',
-              items: races.map((Race race) {
-                return DropdownMenuItem<String>(
-                  value: race.name,
-                  child: Text(
-                      '${race.name} (${race.getDistance(useMetricUnits).toStringAsFixed(1)} ${race.getDistanceLabel(useMetricUnits)})'),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedRace = newValue;
-                  _calculatePace();
-                });
-              },
-            ),
-          ],
+              // Input Card
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(appTheme(context).cardPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Calculate Pace',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      SizedBox(height: appTheme(context).cardSpacing),
+                      Text(
+                        "Enter your time and distance to calculate pace per ${state.useMetricUnits ? 'km' : 'mi'}",
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                      SizedBox(height: appTheme(context).cardSpacing),
+
+                      // Distance Selector
+                      StandardDropdown<String>(
+                        labelText: "Distance",
+                        value: state.selectedDistance > 0
+                            ? _getRaceName(
+                                state.selectedDistance, state.useMetricUnits)
+                            : null,
+                        items: _getRaceOptions(state.useMetricUnits)
+                            .map((item) => DropdownMenuItem<String>(
+                                  value: item,
+                                  child: Text(item),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            final distance = _getDistanceFromName(
+                                value, state.useMetricUnits);
+                            context
+                                .read<PaceCalculatorBloc>()
+                                .add(SetPaceCalculatorDistance(distance));
+                          }
+                        },
+                      ),
+                      SizedBox(height: appTheme(context).cardSpacing),
+
+                      // Time Input
+                      InteractiveTimeInput(
+                        initialTime: Duration(
+                            hours: state.hours, minutes: state.minutes),
+                        onTimeChanged: (time) {
+                          context
+                              .read<PaceCalculatorBloc>()
+                              .add(SetPaceCalculatorHours(time.inHours));
+                          context.read<PaceCalculatorBloc>().add(
+                              SetPaceCalculatorMinutes(time.inMinutes % 60));
+                        },
+                        label: "Time",
+                        showSeconds: false,
+                      ),
+                      SizedBox(height: appTheme(context).cardSpacing),
+
+                      // Calculate Button
+                      StandardButton(
+                        text: 'Calculate Pace',
+                        icon: Icons.calculate_rounded,
+                        onPressed: () {
+                          context
+                              .read<PaceCalculatorBloc>()
+                              .add(CalculatePaceCalculator());
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: appTheme(context).sectionSpacing),
+
+              // Results Card
+              if (state.calculatedPace != null) ...[
+                Card(
+                  elevation: 4,
+                  shadowColor: Theme.of(context)
+                      .colorScheme
+                      .shadow
+                      .withValues(alpha: 0.1),
+                  child: Padding(
+                    padding: EdgeInsets.all(appTheme(context).cardPadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.timer_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Calculated Pace',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: appTheme(context).cardSpacing),
+                        Container(
+                          width: double.infinity,
+                          padding:
+                              EdgeInsets.all(appTheme(context).cardPadding),
+                          decoration: BoxDecoration(
+                            color:
+                                Theme.of(context).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(
+                                appTheme(context).borderRadius),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                _formatPace(state.calculatedPace!),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'per ${state.useMetricUnits ? 'km' : 'mi'}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer
+                                          .withValues(alpha: 0.8),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              // Error Message
+              if (state.errorMessage != null) ...[
+                SizedBox(height: appTheme(context).cardSpacing),
+                Container(
+                  padding: EdgeInsets.all(appTheme(context).cardPadding),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    borderRadius:
+                        BorderRadius.circular(appTheme(context).borderRadius),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          state.errorMessage!,
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         );
       },
     );
   }
 
-  void _calculatePace() {
-    if (selectedRace == null || (hours == 0 && minutes == 0)) {
-      setState(() {
-        calculatedPaceMinutes = null;
-        calculatedPaceSeconds = null;
-      });
-      return;
+  String _getRaceName(double distance, bool useMetricUnits) {
+    // This is a simplified mapping - in a real app you'd want to load from the service
+    if (useMetricUnits) {
+      if (distance == 1.0) return '1 Mile';
+      if (distance == 5.0) return '5K';
+      if (distance == 10.0) return '10K';
+      if (distance == 21.097) return 'Half Marathon';
+      if (distance == 42.195) return 'Marathon';
+      if (distance == 50.0) return '50K';
+    } else {
+      if (distance == 1.0) return '1 Mile';
+      if (distance == 3.1) return '5K';
+      if (distance == 6.2) return '10K';
+      if (distance == 13.1) return 'Half Marathon';
+      if (distance == 26.2) return 'Marathon';
+      if (distance == 31.1) return '50K';
     }
+    return 'Custom';
+  }
 
-    // Get the race distance
-    RaceService.getRaces().then((races) {
-      final race = races.firstWhere((r) => r.name == selectedRace);
-      final distance = race.getDistance(useMetricUnits);
-      final totalMinutes = hours * 60 + minutes;
+  double _getDistanceFromName(String name, bool useMetricUnits) {
+    // This is a simplified mapping - in a real app you'd want to load from the service
+    switch (name) {
+      case '1 Mile':
+        return 1.0;
+      case '5K':
+        return useMetricUnits ? 5.0 : 3.1;
+      case '10K':
+        return useMetricUnits ? 10.0 : 6.2;
+      case 'Half Marathon':
+        return useMetricUnits ? 21.097 : 13.1;
+      case 'Marathon':
+        return useMetricUnits ? 42.195 : 26.2;
+      case '50K':
+        return useMetricUnits ? 50.0 : 31.1;
+      default:
+        return 0.0;
+    }
+  }
 
-      if (totalMinutes > 0 && distance > 0) {
-        final pacePerUnit = totalMinutes / distance;
-        final paceMinutes = pacePerUnit.floor();
-        final paceSeconds = ((pacePerUnit - paceMinutes) * 60).round();
+  List<String> _getRaceOptions(bool useMetricUnits) {
+    return [
+      '1 Mile',
+      '5K',
+      '10K',
+      'Half Marathon',
+      'Marathon',
+      '50K',
+    ];
+  }
 
-        setState(() {
-          calculatedPaceMinutes = paceMinutes.toDouble();
-          calculatedPaceSeconds = paceSeconds.toDouble();
-        });
-      }
-    });
+  String _formatPace(Duration pace) {
+    final minutes = pace.inMinutes;
+    final seconds = pace.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 }

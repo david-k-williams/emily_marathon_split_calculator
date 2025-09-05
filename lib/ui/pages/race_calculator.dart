@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:emily_marathon_split_calculator/bloc/bloc.dart';
+import 'package:emily_marathon_split_calculator/bloc/blocs.dart';
 import 'package:emily_marathon_split_calculator/ui/widgets/settings_card.dart';
 import 'package:emily_marathon_split_calculator/ui/widgets/consistent_inputs.dart';
 import 'package:emily_marathon_split_calculator/ui/theme/theme.dart';
@@ -98,76 +98,20 @@ class RaceCalculatorPage extends StatelessWidget {
               ),
               SizedBox(height: appTheme(context).sectionSpacing),
 
-              // Units toggle - inline with header
-              Container(
-                padding: EdgeInsets.symmetric(
-                    horizontal: appTheme(context).cardPadding,
-                    vertical: appTheme(context).cardSpacing),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainer,
-                  borderRadius:
-                      BorderRadius.circular(appTheme(context).borderRadius),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.straighten_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Units",
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color:
-                            Theme.of(context).colorScheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            settings.useMetricUnits ? 'km' : 'mi',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Switch(
-                            value: settings.useMetricUnits,
-                            onChanged: (value) {
-                              context
-                                  .read<RaceSettingsBloc>()
-                                  .add(ToggleUnits());
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              // Units toggle
+              UnitsToggle(
+                useMetricUnits: settings.useMetricUnits,
+                onChanged: (value) {
+                  context.read<RaceSettingsBloc>().add(ToggleUnits());
+                },
               ),
               SizedBox(height: appTheme(context).cardSpacing),
 
               // Settings card
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 300),
-                firstChild: SettingsCard(settings: settings),
-                secondChild: GestureDetector(
+              if (settings.settingsVisible)
+                SettingsCard(settings: settings)
+              else
+                GestureDetector(
                   onTap: () {
                     context
                         .read<RaceSettingsBloc>()
@@ -211,10 +155,6 @@ class RaceCalculatorPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                crossFadeState: settings.settingsVisible
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-              ),
               SizedBox(height: appTheme(context).cardSpacing),
 
               // Calculate button - prominent below settings

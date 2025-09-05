@@ -60,9 +60,6 @@ class RaceSettingsBloc extends Bloc<RaceSettingsEvent, RaceSettingsState> {
     on<ToggleUnits>((event, emit) {
       emit(state.copyWith(useMetricUnits: !state.useMetricUnits));
     });
-    on<SetSelectedTab>((event, emit) {
-      emit(state.copyWith(selectedTabIndex: event.tabIndex));
-    });
     on<SetCalculatorHours>((event, emit) {
       emit(state.copyWith(calculatorHours: event.hours));
     });

@@ -46,4 +46,3 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     });
   }
 }
-

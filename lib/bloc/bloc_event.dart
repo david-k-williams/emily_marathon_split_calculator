@@ -28,11 +28,6 @@ class ToggleSettingsVisibility extends RaceSettingsEvent {}
 
 class ToggleUnits extends RaceSettingsEvent {}
 
-class SetSelectedTab extends RaceSettingsEvent {
-  final int tabIndex;
-  SetSelectedTab(this.tabIndex);
-}
-
 class SetCalculatorHours extends RaceSettingsEvent {
   final int hours;
   SetCalculatorHours(this.hours);

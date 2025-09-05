@@ -179,6 +179,7 @@ class InteractiveTimeInput extends StatefulWidget {
   final String label;
   final bool showLabel;
   final bool showSeconds;
+  final bool showHours;
 
   const InteractiveTimeInput({
     super.key,
@@ -187,6 +188,7 @@ class InteractiveTimeInput extends StatefulWidget {
     this.label = "Time",
     this.showLabel = true,
     this.showSeconds = true,
+    this.showHours = true,
   });
 
   @override
@@ -224,71 +226,149 @@ class _InteractiveTimeInputState extends State<InteractiveTimeInput> {
           InputLabel(text: widget.label),
           const InputSpacing(),
         ],
-        Container(
-          padding: EdgeInsets.all(appTheme(context).cardPadding),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(appTheme(context).borderRadius),
-            border: Border.all(
-              color:
-                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-            ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: 200,
+            minHeight: 60,
           ),
-          child: Row(
-            children: [
-              if (!widget.showSeconds || hours > 0) ...[
-                _TimeInputField(
-                  label: 'Hours',
-                  value: hours,
-                  min: 0,
-                  max: 23,
-                  onChanged: (value) {
-                    setState(() {
-                      hours = value;
-                      _updateTime();
-                    });
-                  },
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  ':',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 16),
-              ],
-              _TimeInputField(
-                label: 'Minutes',
-                value: minutes,
-                min: 0,
-                max: 59,
-                onChanged: (value) {
-                  setState(() {
-                    minutes = value;
-                    _updateTime();
-                  });
-                },
+          child: Container(
+            padding: EdgeInsets.all(appTheme(context).cardPadding),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainer,
+              borderRadius:
+                  BorderRadius.circular(appTheme(context).borderRadius),
+              border: Border.all(
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.3),
               ),
-              if (widget.showSeconds) ...[
-                const SizedBox(width: 16),
-                const Text(
-                  ':',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 16),
-                _TimeInputField(
-                  label: 'Seconds',
-                  value: seconds,
-                  min: 0,
-                  max: 59,
-                  onChanged: (value) {
-                    setState(() {
-                      seconds = value;
-                      _updateTime();
-                    });
-                  },
-                ),
-              ],
-            ],
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Handle invalid constraints gracefully
+                if (constraints.maxWidth <= 0 || !constraints.hasBoundedWidth) {
+                  return const SizedBox.shrink();
+                }
+
+                // Use column layout on mobile (width < 600) or when there are many fields
+                final isMobile = constraints.maxWidth < 600;
+                final hasHours =
+                    widget.showHours && (!widget.showSeconds || hours > 0);
+                final hasSeconds = widget.showSeconds;
+                final fieldCount =
+                    (hasHours ? 1 : 0) + 1 + (hasSeconds ? 1 : 0);
+                final useColumn = isMobile || fieldCount > 2;
+
+                if (useColumn) {
+                  return Column(
+                    children: [
+                      if (hasHours) ...[
+                        _TimeInputField(
+                          label: 'Hours',
+                          value: hours,
+                          min: 0,
+                          max: 23,
+                          onChanged: (value) {
+                            setState(() {
+                              hours = value;
+                              _updateTime();
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      _TimeInputField(
+                        label: 'Minutes',
+                        value: minutes,
+                        min: 0,
+                        max: 59,
+                        onChanged: (value) {
+                          setState(() {
+                            minutes = value;
+                            _updateTime();
+                          });
+                        },
+                      ),
+                      if (hasSeconds) ...[
+                        const SizedBox(height: 12),
+                        _TimeInputField(
+                          label: 'Seconds',
+                          value: seconds,
+                          min: 0,
+                          max: 59,
+                          onChanged: (value) {
+                            setState(() {
+                              seconds = value;
+                              _updateTime();
+                            });
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                } else {
+                  return Row(
+                    children: [
+                      if (hasHours) ...[
+                        _TimeInputField(
+                          label: 'Hours',
+                          value: hours,
+                          min: 0,
+                          max: 23,
+                          onChanged: (value) {
+                            setState(() {
+                              hours = value;
+                              _updateTime();
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        const Text(
+                          ':',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                      _TimeInputField(
+                        label: 'Minutes',
+                        value: minutes,
+                        min: 0,
+                        max: 59,
+                        onChanged: (value) {
+                          setState(() {
+                            minutes = value;
+                            _updateTime();
+                          });
+                        },
+                      ),
+                      if (hasSeconds) ...[
+                        const SizedBox(width: 16),
+                        const Text(
+                          ':',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 16),
+                        _TimeInputField(
+                          label: 'Seconds',
+                          value: seconds,
+                          min: 0,
+                          max: 59,
+                          onChanged: (value) {
+                            setState(() {
+                              seconds = value;
+                              _updateTime();
+                            });
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                }
+              },
+            ),
           ),
         ),
       ],
@@ -313,56 +393,54 @@ class _TimeInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: value > min ? () => onChanged(value - 1) : null,
-                icon: const Icon(Icons.remove),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
-                ),
+    return Column(
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 8),
-              Container(
-                width: 60,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  value.toString().padLeft(2, '0'),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: value > min ? () => onChanged(value - 1) : null,
+              icon: const Icon(Icons.remove),
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: value < max ? () => onChanged(value + 1) : null,
-                icon: const Icon(Icons.add),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
-                ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 60,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
-          ),
-        ],
-      ),
+              child: Text(
+                value.toString().padLeft(2, '0'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: value < max ? () => onChanged(value + 1) : null,
+              icon: const Icon(Icons.add),
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
