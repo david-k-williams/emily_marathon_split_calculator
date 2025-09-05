@@ -23,7 +23,7 @@ class ReleaseNotesData {
       date: "September 2025",
       features: [
         "🗺️ Race Route Calculator (Beta) - Real race data with interactive maps",
-        "📍 GPX/KML Support - Load actual race routes from GPX and KML files",
+        "📍 GPX/KML Support - Load actual race routes from both GPX and KML files",
         "🗺️ Interactive Maps - Visualize race routes with mile markers and elevation",
         "📱 Map Integration - Click markers to open in Google Maps or Apple Maps",
         "⛰️ Elevation Data - View elevation profiles and adjust pace for hills",

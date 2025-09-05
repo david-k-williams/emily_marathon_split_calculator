@@ -173,11 +173,8 @@ class SplitTime {
   }
 
   String get distanceDisplay {
-    if (distance >= 1000) {
-      return '${(distance / 1000).toStringAsFixed(1)} km';
-    } else {
-      return '${distance.toStringAsFixed(0)} m';
-    }
+    final miles = distance / 1609.34; // Convert meters to miles
+    return '${miles.toStringAsFixed(1)} mi';
   }
 }
 
@@ -315,8 +312,8 @@ class RaceSpecificBloc extends Bloc<RaceSpecificEvent, RaceSpecificState> {
     final mileMarkers = route.getMileMarkers();
 
     if (currentState.useElevationAdjustment) {
-      // Use elevation-adjusted calculations
-      final elevationSplits = _calculateElevationAdjustedSplits(
+      // Use elevation-adjusted calculations with a simpler approach
+      final elevationSplits = _calculateSimpleElevationSplits(
         basePaceSeconds: paceSeconds,
         route: route,
         mileMarkers: mileMarkers,
@@ -359,6 +356,88 @@ class RaceSpecificBloc extends Bloc<RaceSpecificEvent, RaceSpecificState> {
     emit(currentState.copyWith(calculatedSplits: splits));
   }
 
+  List<SplitTime> _calculateSimpleElevationSplits({
+    required int basePaceSeconds,
+    required GPXRoute route,
+    required List<GPXPoint> mileMarkers,
+    required int startTimeSeconds,
+  }) {
+    final splits = <SplitTime>[];
+    int cumulativeTimeSeconds = 0;
+
+    for (int i = 0; i < mileMarkers.length; i++) {
+      final marker = mileMarkers[i];
+      final miles = marker.distance! / 1609.34; // Convert meters to miles
+
+      // Calculate elevation change for this mile segment
+      double elevationChange = 0;
+
+      if (i == 0) {
+        // First mile - from start to first marker
+        final startElevation =
+            (route.points.first.elevation ?? 0) * 3.28084; // Convert to feet
+        final endElevation =
+            (marker.elevation ?? 0) * 3.28084; // Convert to feet
+        elevationChange = endElevation - startElevation;
+      } else {
+        // Subsequent miles - from previous marker to current marker
+        final prevMarker = mileMarkers[i - 1];
+        final prevElevation =
+            (prevMarker.elevation ?? 0) * 3.28084; // Convert to feet
+        final currentElevation =
+            (marker.elevation ?? 0) * 3.28084; // Convert to feet
+        elevationChange = currentElevation - prevElevation;
+      }
+
+      // Calculate pace adjustment for this mile
+      // Very conservative: 0.5% slower per 100ft elevation gain
+      final elevationAdjustment = (elevationChange / 100) * 0.005;
+
+      // Cap the adjustment to prevent extreme values
+      final cappedAdjustment =
+          elevationAdjustment.clamp(-0.1, 0.1); // Max 10% slower or faster
+
+      // Apply adjustment to this mile's pace
+      final adjustedPaceSeconds =
+          (basePaceSeconds * (1 + cappedAdjustment)).round();
+
+      // Calculate split time for this mile
+      final splitTimeSeconds = (miles * adjustedPaceSeconds).round();
+      cumulativeTimeSeconds += splitTimeSeconds;
+
+      final hours = splitTimeSeconds ~/ 3600;
+      final minutes = (splitTimeSeconds % 3600) ~/ 60;
+      final seconds = splitTimeSeconds % 60;
+
+      final arrivalTimeSeconds = startTimeSeconds + cumulativeTimeSeconds;
+      final arrivalHours = arrivalTimeSeconds ~/ 3600;
+      final arrivalMinutes = (arrivalTimeSeconds % 3600) ~/ 60;
+      final arrivalSeconds = arrivalTimeSeconds % 60;
+
+      // Debug logging for first few miles
+      if (i < 3) {
+        print(
+            'DEBUG: Mile ${i + 1}: elevationChange=${elevationChange.toStringAsFixed(0)}ft, adjustment=${(cappedAdjustment * 100).toStringAsFixed(1)}%, pace=${adjustedPaceSeconds}s');
+      }
+
+      splits.add(SplitTime(
+        distance: marker.distance!,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        elevation: marker.elevation,
+        markerName: 'Mile ${i + 1}',
+        arrivalHours: arrivalHours,
+        arrivalMinutes: arrivalMinutes,
+        arrivalSeconds: arrivalSeconds,
+        latitude: marker.latitude,
+        longitude: marker.longitude,
+      ));
+    }
+
+    return splits;
+  }
+
   List<SplitTime> _calculateElevationAdjustedSplits({
     required int basePaceSeconds,
     required GPXRoute route,
@@ -379,8 +458,10 @@ class RaceSpecificBloc extends Bloc<RaceSpecificEvent, RaceSpecificState> {
 
       if (i == 0) {
         // First mile - from start to first marker
-        final startElevation = route.points.first.elevation ?? 0;
-        final endElevation = marker.elevation ?? 0;
+        final startElevation =
+            (route.points.first.elevation ?? 0) * 3.28084; // Convert to feet
+        final endElevation =
+            (marker.elevation ?? 0) * 3.28084; // Convert to feet
         final elevationChange = endElevation - startElevation;
 
         if (elevationChange > 0) {
@@ -391,8 +472,10 @@ class RaceSpecificBloc extends Bloc<RaceSpecificEvent, RaceSpecificState> {
       } else {
         // Subsequent miles - from previous marker to current marker
         final prevMarker = mileMarkers[i - 1];
-        final prevElevation = prevMarker.elevation ?? 0;
-        final currentElevation = marker.elevation ?? 0;
+        final prevElevation =
+            (prevMarker.elevation ?? 0) * 3.28084; // Convert to feet
+        final currentElevation =
+            (marker.elevation ?? 0) * 3.28084; // Convert to feet
         final elevationChange = currentElevation - prevElevation;
 
         if (elevationChange > 0) {
@@ -450,24 +533,36 @@ class RaceSpecificBloc extends Bloc<RaceSpecificEvent, RaceSpecificState> {
   }) {
     if (distanceMiles <= 0) return basePaceSeconds;
 
-    // Elevation adjustment factors
-    const double uphillFactor = 0.15; // 15% slower per 100m elevation gain
-    const double downhillFactor = 0.05; // 5% faster per 100m elevation loss
+    // Elevation adjustment factors (per 100 feet of elevation change)
+    const double uphillFactor = 0.005; // 0.5% slower per 100ft elevation gain
+    const double downhillFactor = 0.002; // 0.2% faster per 100ft elevation loss
 
-    // Calculate elevation change per mile
-    final elevationGainPerMile = elevationGain / distanceMiles;
-    final elevationLossPerMile = elevationLoss / distanceMiles;
+    // Elevation values are already in feet
+    final elevationGainFeet = elevationGain;
+    final elevationLossFeet = elevationLoss;
 
-    // Calculate pace adjustment
-    final uphillAdjustment =
-        elevationGainPerMile * uphillFactor / 100; // per 100m
-    final downhillAdjustment =
-        elevationLossPerMile * downhillFactor / 100; // per 100m
+    // Calculate pace adjustment based on total elevation change
+    final uphillAdjustment = (elevationGainFeet / 100) * uphillFactor;
+    final downhillAdjustment = (elevationLossFeet / 100) * downhillFactor;
 
     final totalAdjustment = uphillAdjustment - downhillAdjustment;
 
+    // Cap the total adjustment to prevent extreme values
+    final cappedAdjustment =
+        totalAdjustment.clamp(-0.5, 0.5); // Max 50% slower or faster
+
+    // Debug logging
+    print(
+        'DEBUG: distanceMiles=$distanceMiles, elevationGain=${elevationGainFeet.toStringAsFixed(1)}ft, elevationLoss=${elevationLossFeet.toStringAsFixed(1)}ft');
+    print(
+        'DEBUG: uphillAdjustment=${(uphillAdjustment * 100).toStringAsFixed(1)}%, downhillAdjustment=${(downhillAdjustment * 100).toStringAsFixed(1)}%');
+    print(
+        'DEBUG: totalAdjustment=${(totalAdjustment * 100).toStringAsFixed(1)}%, cappedAdjustment=${(cappedAdjustment * 100).toStringAsFixed(1)}%');
+    print(
+        'DEBUG: basePace=${basePaceSeconds}s, adjustedPace=${(basePaceSeconds * (1 + cappedAdjustment)).round()}s');
+
     // Apply adjustment (positive = slower, negative = faster)
-    final adjustedPace = basePaceSeconds * (1 + totalAdjustment);
+    final adjustedPace = basePaceSeconds * (1 + cappedAdjustment);
 
     return adjustedPace.round();
   }

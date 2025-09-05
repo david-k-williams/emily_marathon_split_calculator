@@ -206,7 +206,7 @@ class _RaceSpecificPageState extends State<RaceSpecificPage> {
                   child: _buildInfoItem(
                     context,
                     'Distance',
-                    '${(route.totalDistance / 1000).toStringAsFixed(1)} km',
+                    '${(route.totalDistance / 1609.34).toStringAsFixed(1)} miles',
                     Icons.straighten_rounded,
                   ),
                 ),
@@ -215,7 +215,7 @@ class _RaceSpecificPageState extends State<RaceSpecificPage> {
                     child: _buildInfoItem(
                       context,
                       'Elevation Gain',
-                      '${route.elevationGain!.toStringAsFixed(0)} m',
+                      '${(route.elevationGain! * 3.28084).toStringAsFixed(0)} ft',
                       Icons.terrain_rounded,
                     ),
                   ),
@@ -230,7 +230,7 @@ class _RaceSpecificPageState extends State<RaceSpecificPage> {
                     child: _buildInfoItem(
                       context,
                       'Min Elevation',
-                      '${route.minElevation!.toStringAsFixed(0)} m',
+                      '${(route.minElevation! * 3.28084).toStringAsFixed(0)} ft',
                       Icons.keyboard_arrow_down_rounded,
                     ),
                   ),
@@ -238,7 +238,7 @@ class _RaceSpecificPageState extends State<RaceSpecificPage> {
                     child: _buildInfoItem(
                       context,
                       'Max Elevation',
-                      '${route.maxElevation!.toStringAsFixed(0)} m',
+                      '${(route.maxElevation! * 3.28084).toStringAsFixed(0)} ft',
                       Icons.keyboard_arrow_up_rounded,
                     ),
                   ),
@@ -597,7 +597,7 @@ class _RaceSpecificPageState extends State<RaceSpecificPage> {
                             if (split.elevation != null) ...[
                               const SizedBox(height: 2),
                               Text(
-                                '${split.elevation!.toStringAsFixed(0)}m elevation',
+                                '${(split.elevation! * 3.28084).toStringAsFixed(0)}ft elevation',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall

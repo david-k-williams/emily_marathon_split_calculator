@@ -109,30 +109,42 @@ class GPXParser {
     // In a real app, you might want to maintain a list of available races
     return [
       {
-        'fileName': 'route6605727884',
+        'fileName': '20250905103842-42193-data.gpx',
         'displayName': 'Marine Corps Marathon',
       },
       {
-        'fileName': 'route6447533257',
+        'fileName': '20250905103959-42193-data.gpx',
         'displayName': 'Cherry Blossom 10 Miler',
       },
       {
-        'fileName': 'route82820',
+        'fileName': '20250905104220-42193-data.gpx',
         'displayName': 'NYC Half Marathon',
-      }
+      },
     ];
   }
 
   static Future<GPXRoute> parseGPXFile(String fileName) async {
     try {
-      final content = await rootBundle.loadString('assets/races/$fileName.kml');
-      return await parseGPXContent(content);
+      final content = await rootBundle.loadString('assets/races/$fileName');
+      return await parseGPXContent(content, fileName);
     } catch (e) {
-      throw Exception('Failed to load KML file: $e');
+      throw Exception('Failed to load file: $e');
     }
   }
 
-  static Future<GPXRoute> parseGPXContent(String content) async {
+  static Future<GPXRoute> parseGPXContent(
+      String content, String fileName) async {
+    // Detect file type based on extension
+    if (fileName.toLowerCase().endsWith('.gpx')) {
+      return await _parseGPXFile(content);
+    } else if (fileName.toLowerCase().endsWith('.kml')) {
+      return await _parseKMLFile(content);
+    } else {
+      throw Exception('Unsupported file type: $fileName');
+    }
+  }
+
+  static Future<GPXRoute> _parseKMLFile(String content) async {
     final kml = await KmlReader().fromString(content);
 
     // Try to access the KML data structure
@@ -178,6 +190,102 @@ class GPXParser {
       final lon = double.tryParse(parts[0]) ?? 0.0;
       final lat = double.tryParse(parts[1]) ?? 0.0;
       final elevation = parts.length > 2 ? double.tryParse(parts[2]) : null;
+
+      // Calculate distance from previous point
+      if (previousPoint != null) {
+        final distance = Geolocator.distanceBetween(
+          previousPoint.latitude,
+          previousPoint.longitude,
+          lat,
+          lon,
+        );
+        cumulativeDistance += distance;
+
+        // Calculate elevation gain
+        if (elevation != null && previousPoint.elevation != null) {
+          final elevDiff = elevation - previousPoint.elevation!;
+          if (elevDiff > 0) {
+            elevationGain += elevDiff;
+          }
+        }
+      }
+
+      // Update min/max elevation
+      if (elevation != null) {
+        minElevation = minElevation == null
+            ? elevation
+            : (elevation < minElevation ? elevation : minElevation);
+        maxElevation = maxElevation == null
+            ? elevation
+            : (elevation > maxElevation ? elevation : maxElevation);
+      }
+
+      final point = GPXPoint(
+        latitude: lat,
+        longitude: lon,
+        elevation: elevation,
+        distance: cumulativeDistance,
+      );
+
+      points.add(point);
+      previousPoint = point;
+    }
+
+    return GPXRoute(
+      name: trackName,
+      points: points,
+      totalDistance: cumulativeDistance,
+      minElevation: minElevation,
+      maxElevation: maxElevation,
+      elevationGain: elevationGain,
+    );
+  }
+
+  static Future<GPXRoute> _parseGPXFile(String content) async {
+    final gpx = await GpxReader().fromString(content);
+
+    // Try to access the GPX data structure
+    if (gpx.toString().isEmpty) {
+      throw Exception('No data found in GPX file');
+    }
+
+    // Extract track name
+    final nameMatch = RegExp(r'<name>(.*?)</name>').firstMatch(content);
+    final trackName = nameMatch?.group(1) ?? 'Unknown Track';
+
+    // Extract track points using regex (similar to KML approach)
+    final trkptMatches = RegExp(
+            r'<trkpt[^>]*lat="([^"]*)"[^>]*lon="([^"]*)"[^>]*>(.*?)</trkpt>',
+            dotAll: true)
+        .allMatches(content);
+
+    if (trkptMatches.isEmpty) {
+      throw Exception('No track points found in GPX file');
+    }
+
+    print('DEBUG: Found ${trkptMatches.length} track points in GPX file');
+
+    final points = <GPXPoint>[];
+    double cumulativeDistance = 0.0;
+    double? minElevation;
+    double? maxElevation;
+    double elevationGain = 0.0;
+    GPXPoint? previousPoint;
+
+    for (final match in trkptMatches) {
+      final lat = double.tryParse(match.group(1)!) ?? 0.0;
+      final lon = double.tryParse(match.group(2)!) ?? 0.0;
+
+      // Extract elevation from the track point
+      final eleMatch = RegExp(r'<ele>(.*?)</ele>').firstMatch(match.group(3)!);
+      final elevation =
+          eleMatch != null ? double.tryParse(eleMatch.group(1)!) : null;
+
+      // Debug logging for first few points
+      if (points.length < 3) {
+        print(
+            'DEBUG: GPX Point ${points.length + 1}: lat=$lat, lon=$lon, elevation=$elevation');
+      }
 
       // Calculate distance from previous point
       if (previousPoint != null) {

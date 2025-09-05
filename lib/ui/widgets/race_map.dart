@@ -215,13 +215,6 @@ class RaceMap extends StatelessWidget {
             ),
           ),
         ),
-        if (showElevation) ...[
-          const SizedBox(height: 16),
-          ElevationProfile(
-            route: route,
-            mileMarkers: mileMarkers,
-          ),
-        ],
       ],
     );
   }
@@ -316,9 +309,9 @@ class ElevationProfile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Min: ${route.minElevation!.toStringAsFixed(0)}m | '
-            'Max: ${route.maxElevation!.toStringAsFixed(0)}m | '
-            'Gain: ${route.elevationGain!.toStringAsFixed(0)}m',
+            'Min: ${(route.minElevation! * 3.28084).toStringAsFixed(0)}ft | '
+            'Max: ${(route.maxElevation! * 3.28084).toStringAsFixed(0)}ft | '
+            'Gain: ${(route.elevationGain! * 3.28084).toStringAsFixed(0)}ft',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
