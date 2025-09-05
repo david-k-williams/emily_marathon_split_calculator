@@ -4,6 +4,7 @@ import 'package:emily_marathon_split_calculator/bloc/blocs.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/race_calculator.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/pace_calculator_page.dart';
 import 'package:emily_marathon_split_calculator/ui/pages/prediction_page.dart';
+import 'package:emily_marathon_split_calculator/ui/pages/race_specific_page.dart';
 import 'package:emily_marathon_split_calculator/utils/export_utils.dart';
 import 'package:emily_marathon_split_calculator/ui/theme/theme.dart';
 import 'package:emily_marathon_split_calculator/ui/widgets/persistent_footer.dart';
@@ -37,21 +38,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         BlocProvider(create: (context) => AppBloc()),
         BlocProvider(create: (context) => RaceSettingsBloc()),
         BlocProvider(create: (context) => PredictionBloc()),
+        BlocProvider(create: (context) => PaceCalculatorBloc()),
+        BlocProvider(create: (context) => RaceSpecificBloc()),
       ],
       child: BlocBuilder<AppBloc, AppState>(
         builder: (context, appState) {
           return BlocBuilder<RaceSettingsBloc, RaceSettingsState>(
             builder: (context, raceState) {
-              // Update page controller when state changes
-              if (_pageController.hasClients &&
-                  _pageController.page?.round() != appState.selectedTabIndex) {
-                _pageController.animateToPage(
-                  appState.selectedTabIndex,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              }
-
               return Scaffold(
                 body: Container(
                   decoration: BoxDecoration(
@@ -178,14 +171,22 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                             child: PageView(
                               controller: _pageController,
                               onPageChanged: (index) {
-                                context
-                                    .read<AppBloc>()
-                                    .add(SetSelectedTab(index));
+                                // Only update state, don't trigger animations
+                                if (context
+                                        .read<AppBloc>()
+                                        .state
+                                        .selectedTabIndex !=
+                                    index) {
+                                  context
+                                      .read<AppBloc>()
+                                      .add(SetSelectedTab(index));
+                                }
                               },
                               children: const [
                                 RaceCalculatorPage(),
                                 PaceCalculatorPage(),
                                 PredictionPage(),
+                                RaceSpecificPage(),
                               ],
                             ),
                           ),
@@ -244,10 +245,28 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                       appState,
                       2,
                       Icons.trending_up_rounded,
-                      'Predict',
+                      'Predict (Beta)',
                       isMobile: true,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTabButton(
+                      context,
+                      appState,
+                      3,
+                      Icons.route_rounded,
+                      'Race Route (Beta)',
+                      isMobile: true,
+                    ),
+                  ),
+                  const Expanded(
+                      child: SizedBox()), // Empty space for alignment
+                  const Expanded(child: SizedBox()),
                 ],
               ),
             ],
@@ -289,7 +308,17 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     appState,
                     2,
                     Icons.trending_up_rounded,
-                    'Predictions',
+                    'Predict (Beta)',
+                    isMobile: false,
+                  ),
+                ),
+                Expanded(
+                  child: _buildTabButton(
+                    context,
+                    appState,
+                    3,
+                    Icons.route_rounded,
+                    'Race Route (Beta)',
                     isMobile: false,
                   ),
                 ),
@@ -308,7 +337,11 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
     return GestureDetector(
       onTap: () {
-        context.read<AppBloc>().add(SetSelectedTab(index));
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

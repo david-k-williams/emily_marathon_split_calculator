@@ -15,9 +15,38 @@ class ReleaseNote {
 }
 
 class ReleaseNotesData {
-  static const String currentVersion = "1.0.9";
+  static const String currentVersion = "1.0.10";
 
   static const List<ReleaseNote> releaseNotes = [
+    ReleaseNote(
+      version: "1.0.10",
+      date: "September 2025",
+      features: [
+        "🗺️ Race Route Calculator (Beta) - Real race data with interactive maps",
+        "📍 GPX/KML Support - Load actual race routes from GPX and KML files",
+        "🗺️ Interactive Maps - Visualize race routes with mile markers and elevation",
+        "📱 Map Integration - Click markers to open in Google Maps or Apple Maps",
+        "⛰️ Elevation Data - View elevation profiles and adjust pace for hills",
+        "🏃‍♀️ Real Race Data - Pre-loaded routes for Marine Corps Marathon, Cherry Blossom 10 Miler, and Boston Marathon",
+        "📊 Race-Specific Splits - Calculate splits based on actual race mile markers",
+        "🎯 Navigation Ready - Get arrival times for each mile marker for race day navigation",
+      ],
+      improvements: [
+        "Enhanced map visualization with better tile layers and markers",
+        "Improved mobile responsiveness for map interactions",
+        "Better elevation chart display and interaction",
+        "Streamlined units management (removed from prediction and race route pages)",
+        "Fixed tab navigation flickering issues",
+        "Improved map performance with retina display support",
+      ],
+      fixes: [
+        "Fixed tab selection bouncing and flickering",
+        "Resolved map tile loading warnings",
+        "Fixed mobile layout constraints in race route calculator",
+        "Improved map marker visibility and interaction",
+        "Fixed elevation data parsing and display",
+      ],
+    ),
     ReleaseNote(
       version: "1.0.9",
       date: "September 2025",

@@ -29,6 +29,8 @@ class MarathonTimeEstimatorApp extends StatelessWidget {
         BlocProvider(create: (_) => RaceSettingsBloc()),
         BlocProvider(create: (_) => AppBloc()),
         BlocProvider(create: (_) => PredictionBloc()),
+        BlocProvider(create: (_) => PaceCalculatorBloc()),
+        BlocProvider(create: (_) => RaceSpecificBloc()),
       ],
       child: MaterialApp(
         title: "Emily's Race Split Estimator",

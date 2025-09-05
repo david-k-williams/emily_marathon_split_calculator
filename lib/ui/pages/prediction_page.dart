@@ -27,6 +27,7 @@ class _PredictionPageState extends State<PredictionPage> {
     return BlocBuilder<PredictionBloc, PredictionState>(
       builder: (context, state) {
         return SingleChildScrollView(
+          padding: EdgeInsets.all(appTheme(context).cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

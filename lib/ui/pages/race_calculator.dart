@@ -13,6 +13,7 @@ class RaceCalculatorPage extends StatelessWidget {
     return BlocBuilder<RaceSettingsBloc, RaceSettingsState>(
       builder: (context, settings) {
         return SingleChildScrollView(
+          padding: EdgeInsets.all(appTheme(context).cardPadding),
           child: Column(
             children: [
               // Header with gradient

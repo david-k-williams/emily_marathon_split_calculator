@@ -24,6 +24,7 @@ class _PaceCalculatorView extends StatelessWidget {
     return BlocBuilder<PaceCalculatorBloc, PaceCalculatorState>(
       builder: (context, state) {
         return SingleChildScrollView(
+          padding: EdgeInsets.all(appTheme(context).cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
